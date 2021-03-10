@@ -21,10 +21,7 @@ class BookMeUp extends Component {
     super()
     this.state = {
       books: [],
-      book: {},
-      bookISBN: '',
-      bookTitle: '',
-      bookAuthor: '',
+      book: { title: '', authors: [{ name: '' }] },
       currentUser: ''
     }
   }
@@ -52,10 +49,6 @@ class BookMeUp extends Component {
         this.setError(err)
         alert('Book has not been added to bookshelf. Please double check the fields.')
       })
-
-    this.setISBN('')
-    this.setTitle('')
-    this.setAuthor('')
   }
 
   submitSearchString = (searchString) => {
@@ -71,14 +64,9 @@ class BookMeUp extends Component {
   }
 
   submitISBN = (isbn) => {
-    axios.get(`${OPENLIBRARY}/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`, {
-
-    })
+    axios.get(`${OPENLIBRARY}/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`)
       .then((result) => {
-        this.setISBN(isbn)
         this.setBook(result.data[`ISBN:${isbn}`])
-        this.setTitle(result.data[`ISBN:${isbn}`].title)
-        this.setAuthor(result.data[`ISBN:${isbn}`].authors[0].name)
       })
       .catch((err) => {
         console.log(err)
@@ -126,7 +114,6 @@ class BookMeUp extends Component {
     axios.post(`${PORT}/logout`).then((result) => {
       this.setCurrentUser('')
       localStorage.clear()
-      // And display on page?
       return <Redirect to='/sign-up' />
     })
   }
@@ -181,24 +168,6 @@ class BookMeUp extends Component {
     })
   }
 
-  setISBN (isbn) {
-    this.setState({
-      bookISBN: isbn
-    })
-  }
-
-  setTitle (title) {
-    this.setState({
-      bookTitle: title
-    })
-  }
-
-  setAuthor (author) {
-    this.setState({
-      bookAuthor: author
-    })
-  }
-
   setCurrentUser (data) {
     this.setState({
       currentUser: data
@@ -221,13 +190,13 @@ class BookMeUp extends Component {
           <Navigation submitSearchString={ this.submitSearchString } logout={ this.logout } currentUser={ localStorage.success }/>
           <Switch>
             <Route path="/sign-up">
-              <HeaderUserNew addUser={ this.addUser } bookTitle={ this.state.bookTitle } bookAuthor={ this.state.bookAuthor } submitISBN={ this.submitISBN } submitBook={ this.submitBook } />
+              <HeaderUserNew addUser={ this.addUser } />
             </Route>
             <Route path="/sign-in">
-              <HeaderUser signinUser={ this.signinUser } bookTitle={ this.state.bookTitle } bookAuthor={ this.state.bookAuthor } submitISBN={ this.submitISBN } submitBook={ this.submitBook } />
+              <HeaderUser signinUser={ this.signinUser } />
             </Route>
             <Route exact path="/">
-              <Header bookTitle={ this.state.bookTitle } bookAuthor={ this.state.bookAuthor } submitISBN={ this.submitISBN } submitBook={ this.submitBook } />
+              <Header bookTitle={ this.state.book.title } bookAuthor={ this.state.book.authors[0].name } submitISBN={ this.submitISBN } submitBook={ this.submitBook } />
               <BookList books={ this.state.books } requestBook= { this.requestBook }/>
             </Route>
           </Switch>
