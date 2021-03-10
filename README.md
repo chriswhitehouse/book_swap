@@ -139,5 +139,3 @@ Team argy-bargy:
 [Kiki Dawson](https://github.com/kikidawson)
 [Natasha McIntyre](https://github.com/natashamcintyre")
 [Will Dixon](https://github.com/WillDixon93)
-
-## Ideas for Refactoring:
