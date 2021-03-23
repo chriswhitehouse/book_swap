@@ -3,8 +3,6 @@ import BookList from './components/bookList.js'
 import ErrorHandler from './components/errorHandler.js'
 import Navigation from './components/navigation.js'
 import Header from './components/header.js'
-import HeaderUser from './components/headerUser.js'
-import HeaderUserNew from './components/headerUserNew.js'
 import {
   Switch,
   Route,
@@ -22,7 +20,7 @@ class BookMeUp extends Component {
     this.state = {
       books: [],
       book: { title: '', authors: [{ name: '' }] },
-      currentUser: ''
+      currentUser: { displayName: '' }
     }
   }
 
@@ -73,36 +71,13 @@ class BookMeUp extends Component {
       })
   }
 
-  addUser = (username, email, location, password, passwordCheck) => {
-    axios.post(`${PORT}/user-new`, {
-      username: username,
-      email: email,
-      location: location,
-      password: password,
-      passwordCheck: passwordCheck
-    })
-      .then((result) => {
-        if (result.status === 200) {
-          this.setCurrentUser(result.data)
-          this.setLocalStorage(result.data)
-          return <Redirect exact to="/homepage" />
-        }
-      })
-      .catch((err) => {
-        this.setError(err)
-      })
-  }
-
-  signinUser = (username, password) => {
-    axios.post(`${PORT}/login`, {
-      username: username,
-      password: password
-    })
+  userAPI = (route, userData) => {
+    axios.post(`${PORT}/${route}`, userData)
       .then((result) => {
         if (result.data.success) {
           this.setCurrentUser(result.data)
           this.setLocalStorage(result.data)
-          return <Redirect exact from="/sign-up" to="/" />
+          return <Redirect exact to="/" />
         }
       })
       .catch((err) => {
@@ -112,7 +87,8 @@ class BookMeUp extends Component {
 
   logout = () => {
     axios.post(`${PORT}/logout`).then((result) => {
-      this.setCurrentUser('')
+      console.log(result)
+      this.setCurrentUser({ displayName: '' })
       localStorage.clear()
       return <Redirect to='/sign-up' />
     })
@@ -146,19 +122,12 @@ class BookMeUp extends Component {
   }
 
   componentDidMount () {
-    if (localStorage.displayName) {
-      const user = {
-        displayName: localStorage.displayName,
-        id: localStorage.id,
-        success: localStorage.success,
-        email: localStorage.email,
-        location: localStorage.location
-      }
+    var user = JSON.parse(localStorage.getItem('user'))
+    if (user) {
       this.setCurrentUser(user)
     } else {
       this.setCurrentUser('')
     }
-
     this.getBooks()
   }
 
@@ -168,18 +137,14 @@ class BookMeUp extends Component {
     })
   }
 
-  setCurrentUser (data) {
+  setCurrentUser (user) {
     this.setState({
-      currentUser: data
+      currentUser: user
     })
   }
 
-  setLocalStorage (data) {
-    localStorage.setItem('displayName', data.displayName)
-    localStorage.setItem('id', data.id)
-    localStorage.setItem('success', data.success)
-    localStorage.setItem('email', data.email)
-    localStorage.setItem('location', data.location)
+  setLocalStorage (user) {
+    localStorage.setItem('user', JSON.stringify(user))
   }
 
   render () {
@@ -187,16 +152,10 @@ class BookMeUp extends Component {
       <HashRouter>
         <div className="homepage">
           <ErrorHandler error={ this.state.error }/>
-          <Navigation submitSearchString={ this.submitSearchString } logout={ this.logout } currentUser={ localStorage.success }/>
+          <Navigation submitSearchString={ this.submitSearchString } logout={ this.logout } currentUser={ this.state.currentUser }/>
+          <Header addUser={ this.userAPI } signinUser={ this.userAPI } bookTitle={ this.state.book.title } bookAuthor={ this.state.book.authors[0].name } submitISBN={ this.submitISBN } submitBook={ this.submitBook } />
           <Switch>
-            <Route path="/sign-up">
-              <HeaderUserNew addUser={ this.addUser } />
-            </Route>
-            <Route path="/sign-in">
-              <HeaderUser signinUser={ this.signinUser } />
-            </Route>
             <Route exact path="/">
-              <Header bookTitle={ this.state.book.title } bookAuthor={ this.state.book.authors[0].name } submitISBN={ this.submitISBN } submitBook={ this.submitBook } />
               <BookList books={ this.state.books } requestBook= { this.requestBook }/>
             </Route>
           </Switch>
